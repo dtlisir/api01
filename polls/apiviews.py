@@ -8,8 +8,10 @@ from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
 from rest_framework import viewsets
-from polls.serializers import PollSerializer, ChoiceSerializer, VoteSerializer
+from polls.serializers import UserSerializer, PollSerializer, ChoiceSerializer, VoteSerializer
 from polls.models import Poll, Choice, Vote
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 # class PollList(APIView):
 #     def get(self, request):
@@ -31,6 +33,12 @@ from polls.models import Poll, Choice, Vote
 # class PollDetail(generics.RetrieveUpdateDestroyAPIView):
 #     queryset = Poll.objects.all()
 #     serializer_class = PollSerializer
+class UserCreate(generics.ListCreateAPIView):
+    authentication_classes = ()
+    permission_classes = ()
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 
 class PollViewSet(viewsets.ModelViewSet):
     queryset = Poll.objects.all()
@@ -57,3 +65,18 @@ class VoteCreate(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogin(APIView):
+    permission_classes = ()
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            return Response({'token': user.auth_token.key})
+        else:
+            return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+
